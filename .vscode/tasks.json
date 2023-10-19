@@ -6,6 +6,8 @@
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
+                "-Wall",
+                "-mwindows",
                 "-g",
                 "${file}",
                 "-o",

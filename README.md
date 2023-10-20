@@ -1,2 +1,2 @@
 # snake
-Snake game in C++
+Snake game in C++ using Win32 library

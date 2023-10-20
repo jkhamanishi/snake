@@ -1,0 +1,9 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+	<title>snake</title>
+	<style>
+		.s0 { fill: none;stroke: #008100;stroke-linecap: round;stroke-linejoin: round;stroke-width: 200 } 
+		.s1 { fill: none;stroke: #ff0000;stroke-linecap: round;stroke-linejoin: round;stroke-width: 200 } 
+	</style>
+	<path id="Background" class="s0" d="m125.8 889.9l754.5-2.6-1.9-755.2-737.2 0.9 2.8 424.7 244.2-1"/>
+	<path id="Layer 1" class="s1" d="m639.9 552l-11.2 1"/>
+</svg>

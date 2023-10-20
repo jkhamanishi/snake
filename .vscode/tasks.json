@@ -2,16 +2,16 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++.exe build active file",
+            "label": "g++ build",
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-Wall",
                 "-mwindows",
                 "-g",
-                "${file}",
+                "*.cpp",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\snake.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"

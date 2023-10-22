@@ -18,9 +18,9 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     static int direction;
 
 
-    auto MenuHandler = [&](WPARAM menuID)
+    auto MenuHandler = [&]()
     {
-        switch (menuID)
+        switch (wParam)
         {
         case IDM_EXIT:
             DestroyWindow(hwnd);
@@ -29,34 +29,31 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             gameState = (gameState > 0) ? 0 : 1;
             break;
         }
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
     };
 
     switch (uMsg)
     {
     case WM_CREATE:
         ShowWindow(hwnd, SW_SHOW);
+        gameState = -2;
         direction = 1;
         break;
 
     case WM_COMMAND:
-        return MenuHandler(wParam);
+        MenuHandler();
+        break;
 
     case WM_PAINT:
         // DisplayTextCenteredMiddle(hwnd, L"snake game");
         DisplayTextCenteredMiddle(hwnd, LPCTSTR(std::to_string(direction).c_str()));
 
         BeginPaint(hwnd, &ps);
-        SelectObject(ps.hdc, GetStockObject(DC_BRUSH));
-        SetDCBrushColor(ps.hdc, RGB(0, 130, 0));
-
-        Rectangle(ps.hdc, 50, 50, 70, 70);
-
+        GamePainter(hwnd, ps.hdc);
         EndPaint(hwnd, &ps);
         break;
 
     case WM_KEYDOWN:
-        KeyboardHandler(wParam, direction);
+        KeyboardHandler(wParam, &direction);
         InvalidateRgn(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
         break;

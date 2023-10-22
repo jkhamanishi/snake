@@ -21,10 +21,10 @@ HMENU LoadGameMenu()
     // Main Menu
     HMENU hMenu = CreateMenu();
     // Game Menu
-    HMENU hSubMenu1 = CreatePopupMenu();
-    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu1, L"&Game");
-    AppendMenu(hSubMenu1, MF_STRING, IDM_PLAYPAUSE, L"&Play/Pause\tEsc");
-    AppendMenu(hSubMenu1, MF_STRING, IDM_EXIT, L"&Exit\tAlt+F4");
+    HMENU hGameMenu = CreatePopupMenu();
+    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hGameMenu, L"&Game");
+    AppendMenu(hGameMenu, MF_STRING, IDM_PLAYPAUSE, L"&Play/Pause\tEsc");
+    AppendMenu(hGameMenu, MF_STRING, IDM_EXIT, L"&Exit\tAlt+F4");
     // Return Main Menu
     return hMenu;
 }

@@ -11,7 +11,7 @@
 RECT GameRect();
 #define GAMEWIDTH  500
 #define GAMEHEIGHT 500
-#define CELLWIDTH    25
+#define CELLWIDTH    24
 #define CONTENTWIDTH 20
 
 // Display Text Function
@@ -23,4 +23,7 @@ void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop);
 #define ID_MOVEDOWN  2
 #define ID_MOVERIGHT 3
 #define ID_MOVEUP    4
-void KeyboardHandler(WPARAM key, int& direction);
+void KeyboardHandler(WPARAM key, int* direction);
+
+// Paint the Game
+void GamePainter(HWND hwnd, HDC hdc);

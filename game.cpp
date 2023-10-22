@@ -38,27 +38,37 @@ void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop)
     DeleteDC(wdc);
 }
 
-void KeyboardHandler(WPARAM key, int& direction)
+void KeyboardHandler(WPARAM key, int *direction)
 {
     switch (key)
     {
-    case 0x41:    // A key
-    case VK_LEFT: // LEFT ARROW key
-        direction = ID_MOVELEFT;
+    case 0x41: // A key
+    case 0x25: // LEFT ARROW key
+        *direction = ID_MOVELEFT;
         return;
-    case 0x53:    // S key
-    case VK_DOWN: // DOWN ARROW key
-        direction = ID_MOVEDOWN;
+    case 0x53: // S key
+    case 0x28: // DOWN ARROW key
+        *direction = ID_MOVEDOWN;
         return;
-    case 0x44:     // D key
-    case VK_RIGHT: // RIGHT ARROW key
-        direction = ID_MOVERIGHT;
+    case 0x44: // D key
+    case 0x27: // RIGHT ARROW key
+        *direction = ID_MOVERIGHT;
         return;
-    case 0x57:  // W
-    case VK_UP: // UP ARROW key
-        direction = ID_MOVEUP;
+    case 0x57: // W key
+    case 0x26: // UP ARROW key
+        *direction = ID_MOVEUP;
         return;
     default:
         return;
     }
+}
+
+void GamePainter(HWND hwnd, HDC hdc)
+{
+    // Select the brush
+    SelectObject(hdc, GetStockObject(DC_BRUSH));
+
+    // Paint the snake
+    SetDCBrushColor(hdc, RGB(0, 130, 0));
+    Rectangle(hdc, 50, 50, 70, 70);
 }

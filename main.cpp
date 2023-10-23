@@ -6,6 +6,7 @@
 #include "style.h"
 #include "game.h"
 #include <string>
+#include <cstdio>  // for printf()
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -73,6 +74,9 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // Hide the external console
+    ShowWindow(GetConsoleWindow(), SW_HIDE);
+
     // Register the window class.
     const wchar_t CLASS_NAME[] = L"Game Window Class";
     WNDCLASS wc = {};

@@ -3,7 +3,7 @@
 #endif
 
 #include <windows.h>
-#include "style.h"
+#include "res/resources.h"
 #include "game.h"
 #include <string>
 #include <cstdio>  // for printf()
@@ -83,17 +83,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpfnWndProc = WindowProcess;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
+    wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = CreateSolidBrush(RGB(0, 0, 0));
-    wc.hIcon = LoadCustomIcon();
+    wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_SNAKEICON));
     RegisterClass(&wc);
+
+    // Window Style
+    const DWORD winStyle = (WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
+
 
     // Create the window.
     HWND hwnd = CreateWindowEx(
         0,                           // Optional window styles.
         CLASS_NAME,                  // Window class
         L"Snake in C++ Using Win32", // Window text
-        SetWindowStyle(),            // Window style
+        winStyle,                    // Window style
 
         // Size and position
         CW_USEDEFAULT,     // Window X position
@@ -101,10 +106,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         GameRect().right,  // Window width
         GameRect().bottom, // Window height
 
-        NULL,           // Parent window
-        LoadGameMenu(), // Menu
-        hInstance,      // Instance handle
-        NULL            // Additional application data
+        NULL,      // Parent window
+        NULL,      // Menu
+        hInstance, // Instance handle
+        NULL       // Additional application data
     );
     if (hwnd == NULL)
     {

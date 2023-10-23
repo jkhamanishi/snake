@@ -1,0 +1,12 @@
+#include "resources.h"
+
+IDR_SNAKEICON ICON "snake.ico"
+
+IDR_MENU MENU
+BEGIN
+    POPUP "&Game"
+    BEGIN
+        MENUITEM "&Play/Pause\tEsc", IDM_PLAYPAUSE
+        MENUITEM "E&xit\tAlt+F4", IDM_EXIT
+    END
+END

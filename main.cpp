@@ -12,41 +12,17 @@ using namespace std;
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    // HDC hdc;                    // handle to device context (DC)
-    PAINTSTRUCT ps;       // paint data for Begin/EndPaint
-    static HDC hdcCompat; // handle to DC for bitmap
-    // static POINT pt;            // x- and y-coordinates of cursor
-
+    PAINTSTRUCT ps; // paint data for Begin/EndPaint
     static int gameState;
     static int direction;
     static vector<LOCONGRID> snake;
     static LOCONGRID foodLoc;
+    static RECT snakeRect;
 
     auto SetInitialValues = [&]()
     {
-        gameState = -2;
-        direction = 1;
-    };
-
-    auto MenuHandler = [&]()
-    {
-        switch (wParam)
-        {
-        case IDM_EXIT:
-            DestroyWindow(hwnd);
-            break;
-        case IDM_PLAYPAUSE:
-            gameState = (gameState > 0) ? 0 : 1;
-            break;
-        }
-    };
-
-    switch (uMsg)
-    {
-    case WM_CREATE:
-        ShowWindow(hwnd, SW_SHOW);
-        InvalidateRgn(hwnd, NULL, FALSE);
-        SetInitialValues();
+        gameState = ID_SPLASHSCREEN;
+        direction = ID_MOVELEFT;
         snake.push_back({10, 10});
         snake.push_back({10, 11});
         snake.push_back({11, 11});
@@ -57,11 +33,37 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         snake.push_back({11, 14});
         snake.push_back({11, 13});
         snake.push_back({11, 12});
+    };
+
+    auto MenuHandler = [&]()
+    {
+        switch (wParam)
+        {
+        case IDM_EXIT:
+            DestroyWindow(hwnd);
+            break;
+        case IDM_PLAYPAUSE:
+            PlayPause(hwnd, gameState);
+            break;
+        }
+    };
+
+    switch (uMsg)
+    {
+    case WM_CREATE:
+        ShowWindow(hwnd, SW_SHOW);
+        SetInitialValues();
+        SetTimer(hwnd, ID_TIMER, TIMERINTERVAL, NULL);
         SetFoodLoc(&foodLoc, snake);
         break;
 
     case WM_COMMAND:
         MenuHandler();
+        break;
+
+    case WM_TIMER:
+        UpdateSnake(snake, direction, snakeRect);
+        RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
         break;
 
     case WM_PAINT:
@@ -73,8 +75,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_KEYDOWN:
-        KeyboardHandler(wParam, &direction, snake);
-        UpdateWindow(hwnd);
+        KeyboardHandler(hwnd, wParam, &direction, snake, gameState);
         break;
 
     case WM_CLOSE:
@@ -82,8 +83,6 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_DESTROY:
-        // Destroy the background brush, compatible bitmap, and bitmap.
-        DeleteDC(hdcCompat);
         PostQuitMessage(0);
         break;
     }

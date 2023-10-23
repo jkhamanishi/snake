@@ -9,6 +9,28 @@
 
 using namespace std;
 
+void PauseGame(HWND hwnd, int &gameState)
+{
+    gameState = ID_GAMEPAUSE;
+    KillTimer(hwnd, ID_TIMER);
+}
+void UnpauseGame(HWND hwnd, int &gameState)
+{
+    gameState = ID_GAMEPLAY;
+    SetTimer(hwnd, ID_TIMER, TIMERINTERVAL, NULL);
+}
+void PlayPause(HWND hwnd, int &gameState)
+{
+    if (gameState > ID_GAMEPAUSE)
+    {
+        PauseGame(hwnd, gameState);
+    }
+    else
+    {
+        UnpauseGame(hwnd, gameState);
+    }
+}
+
 RECT GameRect()
 {
     // RECT of game window (not including title and menu) in client coordinates
@@ -51,7 +73,7 @@ int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 
     return ((diffX << 1) | diffY);
 }
 
-void KeyboardHandler(WPARAM key, int *direction, vector<LOCONGRID> snake)
+void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> snake, int &gameState)
 {
     int invalidDirection = NextBodySegmentDirection(snake);
     switch (key)
@@ -72,9 +94,56 @@ void KeyboardHandler(WPARAM key, int *direction, vector<LOCONGRID> snake)
     case 0x26: // UP ARROW key
         *direction = (invalidDirection != ID_MOVEUP) ? ID_MOVEUP : *direction;
         return;
+    case 0x1B: // ESC key
+        PlayPause(hwnd, gameState);
+        return;
     default:
         return;
     }
+}
+
+void InvalidateSnake(RECT &snakeRect, vector<LOCONGRID> snake)
+{
+    snakeRect.left = snake.at(0).x;
+    snakeRect.top = snake.at(0).y;
+    snakeRect.right = snake.at(0).x;
+    snakeRect.bottom = snake.at(0).y;
+    for (int i = 1; i < snake.size(); i++)
+    {
+        snakeRect.left = (snake.at(i).x < snakeRect.left) ? snake.at(i).x : snakeRect.left;
+        snakeRect.top = (snake.at(i).y < snakeRect.top) ? snake.at(i).y : snakeRect.top;
+        snakeRect.right = (snake.at(i).x > snakeRect.right) ? snake.at(i).x : snakeRect.right;
+        snakeRect.bottom = (snake.at(i).y > snakeRect.bottom) ? snake.at(i).y : snakeRect.bottom;
+    }
+    snakeRect.left *= CELLWIDTH;
+    snakeRect.top = snakeRect.top * CELLWIDTH;
+    snakeRect.right = (snakeRect.right + 1) * CELLWIDTH;
+    snakeRect.bottom = (snakeRect.bottom + 1) * CELLWIDTH;
+}
+
+void UpdateSnake(vector<LOCONGRID> &snake, int direction, RECT &snakeRect)
+{
+    LOCONGRID newSegment = snake.at(0);
+    switch(direction)
+    {
+    case ID_MOVELEFT:
+        newSegment.x -= 1;
+        break;
+    case ID_MOVEDOWN:
+        newSegment.y += 1;
+        break;
+    case ID_MOVERIGHT:
+        newSegment.x += 1;
+        break;
+    case ID_MOVEUP:
+        newSegment.y -= 1;
+        break;
+    default:
+        break;
+    }
+    snake.insert(snake.begin(), newSegment);
+    InvalidateSnake(snakeRect, snake);
+    snake.pop_back();
 }
 
 LOCINPIXELS GridToPixel(LOCONGRID loc)
@@ -87,7 +156,7 @@ LOCINPIXELS GridToPixel(LOCONGRID loc)
 
 void SetFoodLoc(LOCONGRID *foodLoc, vector<LOCONGRID> snake)
 {
-    srand (time(NULL));
+    srand(time(NULL));
     (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
     (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
     for (LOCONGRID bodySegment : snake)
@@ -141,10 +210,10 @@ void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
     SelectObject(hdc, GetStockObject(NULL_PEN));
     SelectObject(hdc, GetStockObject(DC_BRUSH));
     SetDCBrushColor(hdc, RGB(0, 130, 0));
-    for (int i = 0; i < snake.size()-1; i++)
+    for (int i = 0; i < snake.size() - 1; i++)
     {
         LOCINPIXELS currentLocPxl = GridToPixel(snake.at(i));
-        LOCINPIXELS nextLocPxl = GridToPixel(snake.at(i+1));
+        LOCINPIXELS nextLocPxl = GridToPixel(snake.at(i + 1));
         int direction = NextBodySegmentDirection(snake, i);
         int left, top, right, bottom;
         switch (direction)
@@ -172,7 +241,7 @@ void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
 
 void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake)
 {
-    PaintGrid(hdc);
+    // PaintGrid(hdc);
     PaintSnake(hdc, snake);
     PaintFood(hdc, foodLoc);
 }

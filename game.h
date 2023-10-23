@@ -8,6 +8,7 @@ using namespace std;
 #define ID_GAMESTARTING -1
 #define ID_GAMEPAUSE     0
 #define ID_GAMEPLAY      1
+void PlayPause(HWND hwnd, int &gameState);
 
 // Game Dimensions
 RECT GameRect();
@@ -16,6 +17,10 @@ RECT GameRect();
 #define CELLWIDTH     20
 #define CELLHALFWIDTH 10
 #define CONTENTRADIUS  8
+
+// Timer
+#define ID_TIMER 360
+#define TIMERINTERVAL 200
 
 // Display Text Function
 void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message);
@@ -32,7 +37,8 @@ void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
 #define ID_MOVEDOWN   0b01
 #define ID_MOVERIGHT  0b10
 #define ID_MOVEUP    -0b01
-void KeyboardHandler(WPARAM key, int* direction, vector<LOCONGRID> snake);
+void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> snake, int &gameState);
+void UpdateSnake(vector<LOCONGRID> &snake, int direction, RECT &snakeRect);
 
 // Paint the Game
 void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);

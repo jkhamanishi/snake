@@ -5,7 +5,7 @@
 #include <windows.h>
 #include "game.h"
 #include <vector>
-#include <cstdio> // for printf()
+#include <ctime>
 
 using namespace std;
 
@@ -44,9 +44,8 @@ void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop)
 
 int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 0)
 {
-    int nextSegmentIndex = currentSegmentIndex + 1;
     LOCONGRID currentSegment = snake.at(currentSegmentIndex);
-    LOCONGRID nextSegment = snake.at(nextSegmentIndex);
+    LOCONGRID nextSegment = snake.at(currentSegmentIndex + 1);
     int diffX = nextSegment.x - currentSegment.x;
     int diffY = nextSegment.y - currentSegment.y;
     return ((diffX << 1) | diffY);
@@ -88,6 +87,7 @@ LOCINPIXELS GridToPixel(LOCONGRID loc)
 
 void SetFoodLoc(LOCONGRID *foodLoc, vector<LOCONGRID> snake)
 {
+    srand (time(NULL));
     (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
     (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
     for (LOCONGRID bodySegment : snake)

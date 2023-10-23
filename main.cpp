@@ -6,7 +6,7 @@
 #include <vector>
 #include "res/resources.h"
 #include "game.h"
-#include <cstdio> // for printf()
+// #include <cstdio> // for printf()
 
 using namespace std;
 

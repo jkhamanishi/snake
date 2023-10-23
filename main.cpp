@@ -16,6 +16,9 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     static int gameState;
     static int direction;
+    const static int maxSnakeLength = GAMEWIDTH*GAMEHEIGHT;
+    static LOCONGRID snake[maxSnakeLength];
+    static LOCONGRID foodLoc;
 
     auto MenuHandler = [&]()
     {
@@ -33,10 +36,15 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
     case WM_CREATE:
+    {
         ShowWindow(hwnd, SW_SHOW);
         gameState = -2;
         direction = 1;
-        break;
+        snake[0] = {25, 25};
+        snake[1] = {26, 25};
+        SetFoodLoc(&foodLoc, snake);
+    }
+    break;
 
     case WM_COMMAND:
         MenuHandler();
@@ -44,7 +52,6 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     case WM_PAINT:
         // DisplayTextCenteredMiddle(hwnd, L"snake game");
-        DisplayTextCenteredMiddle(hwnd, LPCTSTR(std::to_string(direction).c_str()));
 
         BeginPaint(hwnd, &ps);
         GamePainter(ps.hdc, foodLoc, snake);

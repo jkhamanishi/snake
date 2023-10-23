@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include "game.h"
+#include <cstdio> // for printf()
 
 RECT GameRect()
 {
@@ -75,6 +76,21 @@ LOCINPIXELS GridToPixel(LOCONGRID loc)
     locPxl.x = CELLHALFWIDTH + loc.x * CELLWIDTH;
     locPxl.y = CELLHALFWIDTH + loc.y * CELLWIDTH;
     return locPxl;
+}
+
+void SetFoodLoc(LOCONGRID* foodLoc, LOCONGRID snake[])
+{
+    int n = 2;
+    (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
+    (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
+    for (int i = 0; i < n; i++)
+    {
+        if (snake[i].x == (*foodLoc).x && snake[i].y == (*foodLoc).y )
+        {
+            SetFoodLoc(foodLoc, snake);
+            break;
+        }
+    }
 }
 
 void PaintGrid(HDC hdc)

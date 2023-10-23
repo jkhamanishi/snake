@@ -63,25 +63,59 @@ void KeyboardHandler(WPARAM key, int *direction)
     }
 }
 
-void GamePainter(HWND hwnd, HDC hdc)
+void SetLocation(LOCONGRID *loc, int x, int y)
 {
-    // Select the brush
-    SelectObject(hdc, GetStockObject(DC_BRUSH));
-    SelectObject(hdc, GetStockObject(DC_PEN));
+    (*loc).x = x;
+    (*loc).y = y;
+}
 
-    // Paint the snake
-    SetDCBrushColor(hdc, RGB(0, 130, 0));
-    SetDCPenColor(hdc, RGB(0, 0, 255));
-    // Rectangle(hdc, 50, 50, 70, 70);
+LOCINPIXELS GridToPixel(LOCONGRID loc)
+{
+    LOCINPIXELS locPxl;
+    locPxl.x = CELLHALFWIDTH + loc.x * CELLWIDTH;
+    locPxl.y = CELLHALFWIDTH + loc.y * CELLWIDTH;
+    return locPxl;
+}
+
+void PaintGrid(HDC hdc)
+{
+    // Select and set the pan and brush colors
+    SelectObject(hdc, GetStockObject(DC_PEN));
+    SetDCPenColor(hdc, RGB(20, 20, 20));
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+
+    // Paint the grid
     for (int i = 0; i < GAMEWIDTH / CELLWIDTH; ++i)
     {
         for (int j = 0; j < GAMEHEIGHT / CELLWIDTH; ++j)
         {
-            int left = i*CELLWIDTH;
-            int top = j*CELLWIDTH;
-            int right = (i+1)*CELLWIDTH;
-            int bottom = (j+1)*CELLWIDTH;
+            int left = i * CELLWIDTH;
+            int top = j * CELLWIDTH;
+            int right = (i + 1) * CELLWIDTH;
+            int bottom = (j + 1) * CELLWIDTH;
             Rectangle(hdc, left, top, right, bottom);
         }
     }
+}
+
+void PaintFood(HDC hdc, LOCONGRID loc)
+{
+    // Select and set the pan and brush colors
+    SelectObject(hdc, GetStockObject(NULL_PEN));
+    SelectObject(hdc, GetStockObject(DC_BRUSH));
+    SetDCBrushColor(hdc, RGB(255, 0, 0));
+
+    LOCINPIXELS locPxl = GridToPixel(loc);
+    int left = locPxl.x - CONTENTRADIUS;
+    int top = locPxl.y - CONTENTRADIUS;
+    int right = locPxl.x + CONTENTRADIUS;
+    int bottom = locPxl.y + CONTENTRADIUS;
+
+    Ellipse(hdc, left, top, right, bottom);
+}
+
+void GamePainter(HDC hdc, LOCONGRID foodLoc, LOCONGRID snake[])
+{
+    PaintGrid(hdc);
+    PaintFood(hdc, foodLoc);
 }

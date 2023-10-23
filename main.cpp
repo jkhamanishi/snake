@@ -5,7 +5,6 @@
 #include <windows.h>
 #include "res/resources.h"
 #include "game.h"
-#include <string>
 #include <cstdio> // for printf()
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -48,7 +47,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         DisplayTextCenteredMiddle(hwnd, LPCTSTR(std::to_string(direction).c_str()));
 
         BeginPaint(hwnd, &ps);
-        GamePainter(hwnd, ps.hdc);
+        GamePainter(ps.hdc, foodLoc, snake);
         EndPaint(hwnd, &ps);
         break;
 
@@ -96,16 +95,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AdjustWindowRect(&gameWinRect, (winStyle | ~WS_OVERLAPPED), TRUE); // For some reason the WS_OVERLAPPED style is not allowed.
 
     // Create the window.
-    HWND hwnd = CreateWindowEx(
-        0,                           // Optional window styles.
-        CLASS_NAME,                  // Window class
-        L"Snake in C++ Using Win32", // Window text
-        winStyle,                    // Window style
+    HWND hwnd = CreateWindow(
+        CLASS_NAME, // Window class
+        L"Snake",   // Window title
+        winStyle,   // Window style
 
         CW_USEDEFAULT,      // Window X position
         CW_USEDEFAULT,      // Windox Y position
-        gameWinRect.right,  // Window height in device units
-        gameWinRect.bottom, // Window width in device units
+        gameWinRect.right,  // Window width in device units
+        gameWinRect.bottom, // Window height in device units
 
         NULL,      // Parent window
         NULL,      // Menu

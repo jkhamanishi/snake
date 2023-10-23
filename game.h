@@ -12,7 +12,8 @@ RECT GameRect();
 #define GAMEWIDTH  500
 #define GAMEHEIGHT 500
 #define CELLWIDTH     20
-#define CONTENTRADIUS  5
+#define CELLHALFWIDTH 10
+#define CONTENTRADIUS  8
 
 // Display Text Function
 void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message);
@@ -25,5 +26,10 @@ void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop);
 #define ID_MOVEUP    4
 void KeyboardHandler(WPARAM key, int* direction);
 
+// Grid Attributes
+struct LOCONGRID { int x; int y; };
+struct LOCINPIXELS { int x; int y; };
+void SetFoodLoc(LOCONGRID* foodLoc, LOCONGRID snake[]);
+
 // Paint the Game
-void GamePainter(HWND hwnd, HDC hdc);
+void GamePainter(HDC hdc, LOCONGRID foodLoc, LOCONGRID snake[]);

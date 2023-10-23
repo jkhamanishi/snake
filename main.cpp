@@ -6,7 +6,7 @@
 #include "res/resources.h"
 #include "game.h"
 #include <string>
-#include <cstdio>  // for printf()
+#include <cstdio> // for printf()
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -17,7 +17,6 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     static int gameState;
     static int direction;
-
 
     auto MenuHandler = [&]()
     {
@@ -92,6 +91,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Window Style
     const DWORD winStyle = (WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
 
+    // Get desired window size in device units
+    RECT gameWinRect = GameRect();
+    AdjustWindowRect(&gameWinRect, (winStyle | ~WS_OVERLAPPED), TRUE); // For some reason the WS_OVERLAPPED style is not allowed.
 
     // Create the window.
     HWND hwnd = CreateWindowEx(
@@ -100,11 +102,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         L"Snake in C++ Using Win32", // Window text
         winStyle,                    // Window style
 
-        // Size and position
-        CW_USEDEFAULT,     // Window X position
-        CW_USEDEFAULT,     // Windox Y position
-        GameRect().right,  // Window width
-        GameRect().bottom, // Window height
+        CW_USEDEFAULT,      // Window X position
+        CW_USEDEFAULT,      // Windox Y position
+        gameWinRect.right,  // Window height in device units
+        gameWinRect.bottom, // Window width in device units
 
         NULL,      // Parent window
         NULL,      // Menu

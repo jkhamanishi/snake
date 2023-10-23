@@ -11,8 +11,8 @@
 RECT GameRect();
 #define GAMEWIDTH  500
 #define GAMEHEIGHT 500
-#define CELLWIDTH    24
-#define CONTENTWIDTH 20
+#define CELLWIDTH     20
+#define CONTENTRADIUS  5
 
 // Display Text Function
 void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message);

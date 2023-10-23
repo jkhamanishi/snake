@@ -67,8 +67,21 @@ void GamePainter(HWND hwnd, HDC hdc)
 {
     // Select the brush
     SelectObject(hdc, GetStockObject(DC_BRUSH));
+    SelectObject(hdc, GetStockObject(DC_PEN));
 
     // Paint the snake
     SetDCBrushColor(hdc, RGB(0, 130, 0));
-    Rectangle(hdc, 50, 50, 70, 70);
+    SetDCPenColor(hdc, RGB(0, 0, 255));
+    // Rectangle(hdc, 50, 50, 70, 70);
+    for (int i = 0; i < GAMEWIDTH / CELLWIDTH; ++i)
+    {
+        for (int j = 0; j < GAMEHEIGHT / CELLWIDTH; ++j)
+        {
+            int left = i*CELLWIDTH;
+            int top = j*CELLWIDTH;
+            int right = (i+1)*CELLWIDTH;
+            int bottom = (j+1)*CELLWIDTH;
+            Rectangle(hdc, left, top, right, bottom);
+        }
+    }
 }

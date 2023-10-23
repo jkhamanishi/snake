@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <vector>
+using namespace std;
 
 // Game State Identifiers
 #define ID_GAMEOVER     -3
@@ -19,17 +21,18 @@ RECT GameRect();
 void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message);
 void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop);
 
-// Directional Input
-#define ID_MOVELEFT  1
-#define ID_MOVEDOWN  2
-#define ID_MOVERIGHT 3
-#define ID_MOVEUP    4
-void KeyboardHandler(WPARAM key, int* direction);
-
 // Grid Attributes
 struct LOCONGRID { int x; int y; };
 struct LOCINPIXELS { int x; int y; };
-void SetFoodLoc(LOCONGRID* foodLoc, LOCONGRID snake[]);
+void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
+
+// Directional Input
+// The left bit is the x-direction and the right bit is the y-direction
+#define ID_MOVELEFT  -0b10
+#define ID_MOVEDOWN   0b01
+#define ID_MOVERIGHT  0b10
+#define ID_MOVEUP    -0b01
+void KeyboardHandler(WPARAM key, int* direction, vector<LOCONGRID> snake);
 
 // Paint the Game
-void GamePainter(HDC hdc, LOCONGRID foodLoc, LOCONGRID snake[]);
+void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);

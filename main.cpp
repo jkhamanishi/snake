@@ -3,9 +3,12 @@
 #endif
 
 #include <windows.h>
+#include <vector>
 #include "res/resources.h"
 #include "game.h"
 #include <cstdio> // for printf()
+
+using namespace std;
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -16,9 +19,14 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     static int gameState;
     static int direction;
-    const static int maxSnakeLength = GAMEWIDTH*GAMEHEIGHT;
-    static LOCONGRID snake[maxSnakeLength];
+    static vector<LOCONGRID> snake;
     static LOCONGRID foodLoc;
+
+    auto SetInitialValues = [&]()
+    {
+        gameState = -2;
+        direction = 1;
+    };
 
     auto MenuHandler = [&]()
     {
@@ -36,15 +44,21 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
     case WM_CREATE:
-    {
         ShowWindow(hwnd, SW_SHOW);
-        gameState = -2;
-        direction = 1;
-        snake[0] = {25, 25};
-        snake[1] = {26, 25};
+        InvalidateRgn(hwnd, NULL, FALSE);
+        SetInitialValues();
+        snake.push_back({10, 10});
+        snake.push_back({10, 11});
+        snake.push_back({11, 11});
+        snake.push_back({12, 11});
+        snake.push_back({12, 12});
+        snake.push_back({12, 13});
+        snake.push_back({12, 14});
+        snake.push_back({11, 14});
+        snake.push_back({11, 13});
+        snake.push_back({11, 12});
         SetFoodLoc(&foodLoc, snake);
-    }
-    break;
+        break;
 
     case WM_COMMAND:
         MenuHandler();
@@ -59,8 +73,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_KEYDOWN:
-        KeyboardHandler(wParam, &direction);
-        InvalidateRgn(hwnd, NULL, FALSE);
+        KeyboardHandler(wParam, &direction, snake);
         UpdateWindow(hwnd);
         break;
 

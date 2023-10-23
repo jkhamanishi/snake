@@ -4,7 +4,10 @@
 
 #include <windows.h>
 #include "game.h"
+#include <vector>
 #include <cstdio> // for printf()
+
+using namespace std;
 
 RECT GameRect()
 {
@@ -39,35 +42,40 @@ void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop)
     DeleteDC(wdc);
 }
 
-void KeyboardHandler(WPARAM key, int *direction)
+int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 0)
 {
+    int nextSegmentIndex = currentSegmentIndex + 1;
+    LOCONGRID currentSegment = snake.at(currentSegmentIndex);
+    LOCONGRID nextSegment = snake.at(nextSegmentIndex);
+    int diffX = nextSegment.x - currentSegment.x;
+    int diffY = nextSegment.y - currentSegment.y;
+    return ((diffX << 1) | diffY);
+}
+
+void KeyboardHandler(WPARAM key, int *direction, vector<LOCONGRID> snake)
+{
+    int invalidDirection = NextBodySegmentDirection(snake);
     switch (key)
     {
     case 0x41: // A key
     case 0x25: // LEFT ARROW key
-        *direction = ID_MOVELEFT;
+        *direction = (invalidDirection != ID_MOVELEFT) ? ID_MOVELEFT : *direction;
         return;
     case 0x53: // S key
     case 0x28: // DOWN ARROW key
-        *direction = ID_MOVEDOWN;
+        *direction = (invalidDirection != ID_MOVEDOWN) ? ID_MOVEDOWN : *direction;
         return;
     case 0x44: // D key
     case 0x27: // RIGHT ARROW key
-        *direction = ID_MOVERIGHT;
+        *direction = (invalidDirection != ID_MOVERIGHT) ? ID_MOVERIGHT : *direction;
         return;
     case 0x57: // W key
     case 0x26: // UP ARROW key
-        *direction = ID_MOVEUP;
+        *direction = (invalidDirection != ID_MOVEUP) ? ID_MOVEUP : *direction;
         return;
     default:
         return;
     }
-}
-
-void SetLocation(LOCONGRID *loc, int x, int y)
-{
-    (*loc).x = x;
-    (*loc).y = y;
 }
 
 LOCINPIXELS GridToPixel(LOCONGRID loc)
@@ -78,14 +86,13 @@ LOCINPIXELS GridToPixel(LOCONGRID loc)
     return locPxl;
 }
 
-void SetFoodLoc(LOCONGRID* foodLoc, LOCONGRID snake[])
+void SetFoodLoc(LOCONGRID *foodLoc, vector<LOCONGRID> snake)
 {
-    int n = 2;
     (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
     (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
-    for (int i = 0; i < n; i++)
+    for (LOCONGRID bodySegment : snake)
     {
-        if (snake[i].x == (*foodLoc).x && snake[i].y == (*foodLoc).y )
+        if (bodySegment.x == (*foodLoc).x && bodySegment.y == (*foodLoc).y)
         {
             SetFoodLoc(foodLoc, snake);
             break;
@@ -101,9 +108,9 @@ void PaintGrid(HDC hdc)
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
 
     // Paint the grid
-    for (int i = 0; i < GAMEWIDTH / CELLWIDTH; ++i)
+    for (int i = 0; i < GAMEWIDTH / CELLWIDTH; i++)
     {
-        for (int j = 0; j < GAMEHEIGHT / CELLWIDTH; ++j)
+        for (int j = 0; j < GAMEHEIGHT / CELLWIDTH; j++)
         {
             int left = i * CELLWIDTH;
             int top = j * CELLWIDTH;
@@ -116,7 +123,6 @@ void PaintGrid(HDC hdc)
 
 void PaintFood(HDC hdc, LOCONGRID loc)
 {
-    // Select and set the pan and brush colors
     SelectObject(hdc, GetStockObject(NULL_PEN));
     SelectObject(hdc, GetStockObject(DC_BRUSH));
     SetDCBrushColor(hdc, RGB(255, 0, 0));
@@ -130,8 +136,43 @@ void PaintFood(HDC hdc, LOCONGRID loc)
     Ellipse(hdc, left, top, right, bottom);
 }
 
-void GamePainter(HDC hdc, LOCONGRID foodLoc, LOCONGRID snake[])
+void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
+{
+    SelectObject(hdc, GetStockObject(NULL_PEN));
+    SelectObject(hdc, GetStockObject(DC_BRUSH));
+    SetDCBrushColor(hdc, RGB(0, 130, 0));
+    for (int i = 0; i < snake.size()-1; i++)
+    {
+        LOCINPIXELS currentLocPxl = GridToPixel(snake.at(i));
+        LOCINPIXELS nextLocPxl = GridToPixel(snake.at(i+1));
+        int direction = NextBodySegmentDirection(snake, i);
+        int left, top, right, bottom;
+        switch (direction)
+        {
+        case ID_MOVEUP:
+        case ID_MOVELEFT:
+            left = nextLocPxl.x - CONTENTRADIUS;
+            top = nextLocPxl.y - CONTENTRADIUS;
+            right = currentLocPxl.x + CONTENTRADIUS;
+            bottom = currentLocPxl.y + CONTENTRADIUS;
+            break;
+        case ID_MOVEDOWN:
+        case ID_MOVERIGHT:
+            left = currentLocPxl.x - CONTENTRADIUS;
+            top = currentLocPxl.y - CONTENTRADIUS;
+            right = nextLocPxl.x + CONTENTRADIUS;
+            bottom = nextLocPxl.y + CONTENTRADIUS;
+            break;
+        default:
+            return;
+        }
+        Rectangle(hdc, left, top, right, bottom);
+    }
+}
+
+void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake)
 {
     PaintGrid(hdc);
+    PaintSnake(hdc, snake);
     PaintFood(hdc, foodLoc);
 }

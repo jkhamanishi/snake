@@ -12,8 +12,8 @@ void PlayPause(HWND hwnd, int &gameState);
 
 // Game Dimensions
 RECT GameRect();
-#define GAMEWIDTH  500
-#define GAMEHEIGHT 500
+#define GAMEWIDTH  400
+#define GAMEHEIGHT 400
 #define CELLWIDTH     20
 #define CELLHALFWIDTH 10
 #define CONTENTRADIUS  8
@@ -38,7 +38,7 @@ void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
 #define ID_MOVERIGHT  0b10
 #define ID_MOVEUP    -0b01
 void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> snake, int &gameState);
-void UpdateSnake(vector<LOCONGRID> &snake, int direction, RECT &snakeRect);
+void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RECT &snakeRect);
 
 // Paint the Game
 void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);

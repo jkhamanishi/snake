@@ -121,10 +121,10 @@ void InvalidateSnake(RECT &snakeRect, vector<LOCONGRID> snake)
     snakeRect.bottom = (snakeRect.bottom + 1) * CELLWIDTH;
 }
 
-void UpdateSnake(vector<LOCONGRID> &snake, int direction, RECT &snakeRect)
+void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RECT &snakeRect)
 {
     LOCONGRID newSegment = snake.at(0);
-    switch(direction)
+    switch (direction)
     {
     case ID_MOVELEFT:
         newSegment.x -= 1;
@@ -142,8 +142,16 @@ void UpdateSnake(vector<LOCONGRID> &snake, int direction, RECT &snakeRect)
         break;
     }
     snake.insert(snake.begin(), newSegment);
-    InvalidateSnake(snakeRect, snake);
-    snake.pop_back();
+    if (snake.at(0).x == (*foodLoc).x && snake.at(0).y == (*foodLoc).y)
+    {
+        SetFoodLoc(foodLoc, snake);
+        SetRect(&snakeRect, 0, 0, GAMEWIDTH, GAMEHEIGHT);
+    }
+    else
+    {
+        InvalidateSnake(snakeRect, snake);
+        snake.pop_back();
+    }
 }
 
 LOCINPIXELS GridToPixel(LOCONGRID loc)
@@ -156,15 +164,20 @@ LOCINPIXELS GridToPixel(LOCONGRID loc)
 
 void SetFoodLoc(LOCONGRID *foodLoc, vector<LOCONGRID> snake)
 {
+    bool validLocation = false;
     srand(time(NULL));
-    (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
-    (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
-    for (LOCONGRID bodySegment : snake)
+    while (!validLocation)
     {
-        if (bodySegment.x == (*foodLoc).x && bodySegment.y == (*foodLoc).y)
+        (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
+        (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
+        validLocation = true;
+        for (LOCONGRID bodySegment : snake)
         {
-            SetFoodLoc(foodLoc, snake);
-            break;
+            if (bodySegment.x == (*foodLoc).x && bodySegment.y == (*foodLoc).y)
+            {
+                validLocation = false;
+                break;
+            }
         }
     }
 }

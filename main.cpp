@@ -23,16 +23,9 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     {
         gameState = ID_SPLASHSCREEN;
         direction = ID_MOVELEFT;
-        snake.push_back({10, 10});
-        snake.push_back({10, 11});
-        snake.push_back({11, 11});
-        snake.push_back({12, 11});
-        snake.push_back({12, 12});
-        snake.push_back({12, 13});
-        snake.push_back({12, 14});
-        snake.push_back({11, 14});
-        snake.push_back({11, 13});
-        snake.push_back({11, 12});
+        snake.reserve(GAMEWIDTH*GAMEHEIGHT/CELLWIDTH/CELLWIDTH);
+        snake.push_back({10, 15});
+        snake.push_back({11, 15});
     };
 
     auto MenuHandler = [&]()
@@ -62,7 +55,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_TIMER:
-        UpdateSnake(snake, direction, snakeRect);
+        UpdateSnake(snake, direction, &foodLoc, snakeRect);
         RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
         break;
 

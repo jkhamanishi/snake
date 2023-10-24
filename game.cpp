@@ -1,11 +1,6 @@
-#ifndef UNICODE
-#define UNICODE
-#endif
-
-#include <windows.h>
 #include "game.h"
-#include <vector>
-#include <ctime>
+#include <ctime>  // for rand()
+#include <cstdio> // for printf() and sprintf()
 
 using namespace std;
 
@@ -31,37 +26,32 @@ void PlayPause(HWND hwnd, int &gameState)
     }
 }
 
-RECT GameRect()
+LPCTSTR charToLPCTSTR(const char *text)
 {
-    // RECT of game window (not including title and menu) in client coordinates
-    RECT size;
-    size.left = 0;
-    size.top = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE);
-    size.right = GAMEWIDTH;
-    size.bottom = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE) + GAMEHEIGHT;
-    return size;
+    const size_t size = strlen(text) + 1;
+    wchar_t *wText = new wchar_t[size];
+    mbstowcs(wText, text, size);
+    return (LPCTSTR)wText;
 }
 
-void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message)
+void DisplayTextCenteredMiddle(HDC hdc, char &message)
 {
-    RECT rect = GameRect();
-    HDC wdc = GetWindowDC(hwnd);
-    SetTextColor(wdc, RGB(255, 255, 255));
-    SetBkMode(wdc, OPAQUE);
-    SetBkColor(wdc, RGB(0, 0, 0));
-    DrawText(wdc, message, -1, &rect, (DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP));
-    DeleteDC(wdc);
+    DisplayCenteredText(hdc, message, (GAMEHEIGHT / 2));
 }
 
-void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop)
+void DisplayCenteredText(HDC hdc, char &message, int distFromTop)
 {
-    RECT rect = GameRect();
-    rect.top += distFromTop;
-    HDC wdc = GetWindowDC(hwnd);
-    SetTextColor(wdc, RGB(255, 255, 255));
-    SetBkMode(wdc, TRANSPARENT);
-    DrawText(wdc, message, -1, &rect, (DT_SINGLELINE | DT_NOCLIP));
-    DeleteDC(wdc);
+    LPCTSTR lpString = charToLPCTSTR(&message);
+
+    RECT rect, textRect = {0, 0, 0, 0};
+    GetClientRect(WindowFromDC(hdc), &rect);
+    DrawText(hdc, lpString, -1, &textRect, DT_CALCRECT);
+    rect.top += distFromTop - (textRect.bottom / 2);
+
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, OPAQUE);
+    SetBkColor(hdc, RGB(0, 0, 0));
+    DrawText(hdc, lpString, -1, &rect, (DT_CENTER | DT_NOCLIP));
 }
 
 int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 0)
@@ -252,9 +242,16 @@ void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
     }
 }
 
-void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake)
+void PaintGame(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake)
 {
     // PaintGrid(hdc);
     PaintSnake(hdc, snake);
     PaintFood(hdc, foodLoc);
+}
+
+void PaintGameOverScreen(HDC hdc, int score)
+{
+    char pGameOverText[100];
+    sprintf(pGameOverText, "Game Over\n\nScore:\n%d", score);
+    DisplayTextCenteredMiddle(hdc, *pGameOverText);
 }

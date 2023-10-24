@@ -1,3 +1,7 @@
+#ifndef UNICODE
+    #define UNICODE
+#endif
+
 #include <windows.h>
 #include <vector>
 using namespace std;
@@ -11,7 +15,6 @@ using namespace std;
 void PlayPause(HWND hwnd, int &gameState);
 
 // Game Dimensions
-RECT GameRect();
 #define GAMEWIDTH  400
 #define GAMEHEIGHT 400
 #define CELLWIDTH     20
@@ -23,12 +26,11 @@ RECT GameRect();
 #define TIMERINTERVAL 200
 
 // Display Text Function
-void DisplayTextCenteredMiddle(HWND hwnd, LPCTSTR message);
-void DisplayCenteredText(HWND hwnd, LPCTSTR message, int distFromTop);
+void DisplayCenteredText(HDC hdc, char &message, int distFromTop);
+void DisplayTextCenteredMiddle(HDC hdc, char &message);
 
 // Grid Attributes
-struct LOCONGRID { int x; int y; };
-struct LOCINPIXELS { int x; int y; };
+typedef struct { int x; int y; } LOCONGRID, LOCINPIXELS;
 void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
 
 // Directional Input
@@ -41,4 +43,5 @@ void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> sn
 void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RECT &snakeRect);
 
 // Paint the Game
-void GamePainter(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);
+void PaintGame(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);
+void PaintGameOverScreen(HDC hdc, int score);

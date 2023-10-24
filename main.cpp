@@ -1,14 +1,18 @@
-#ifndef UNICODE
-#define UNICODE
-#endif
-
-#include <windows.h>
-#include <vector>
 #include "res/resources.h"
 #include "game.h"
-// #include <cstdio> // for printf()
 
 using namespace std;
+
+RECT WindowRect()
+{
+    // RECT of game window (not including title and menu) in client coordinates
+    RECT size;
+    size.left = 0;
+    size.top = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE);
+    size.right = GAMEWIDTH;
+    size.bottom = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE) + GAMEHEIGHT;
+    return size;
+}
 
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -60,10 +64,9 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_PAINT:
-        // DisplayTextCenteredMiddle(hwnd, L"snake game");
-
         BeginPaint(hwnd, &ps);
-        GamePainter(ps.hdc, foodLoc, snake);
+        PaintGame(ps.hdc, foodLoc, snake);
+        // PaintGameOverScreen(ps.hdc, snake.size()*100);
         EndPaint(hwnd, &ps);
         break;
 
@@ -103,7 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     const DWORD winStyle = (WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
 
     // Get desired window size in device units
-    RECT gameWinRect = GameRect();
+    RECT gameWinRect = WindowRect();
     AdjustWindowRect(&gameWinRect, (winStyle | ~WS_OVERLAPPED), TRUE); // For some reason the WS_OVERLAPPED style is not allowed.
 
     // Create the window.

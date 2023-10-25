@@ -7,12 +7,12 @@
 using namespace std;
 
 // Game State Identifiers
-#define ID_GAMEOVER     -3
-#define ID_SPLASHSCREEN -2
-#define ID_GAMESTARTING -1
+#define ID_GAMEOVER     -4
+#define ID_SPLASHSCREEN -3
+#define ID_GAMESTARTING -2
 #define ID_GAMEPAUSE     0
-#define ID_GAMEPLAY      1
-void PlayPause(HWND hwnd, int &gameState);
+#define ID_GAMEPAUSING   1
+#define ID_GAMEPLAY      2
 
 // Game Dimensions
 #define GAMEWIDTH  400
@@ -22,8 +22,9 @@ void PlayPause(HWND hwnd, int &gameState);
 #define CONTENTRADIUS  8
 
 // Timer
-#define ID_TIMER 360
-#define TIMERINTERVAL 200
+#define GAMETIMERINTERVAL 200
+#define ID_GAMETIMER  360
+#define ID_PAUSETIMER 380
 
 // Display Text Function
 void DisplayCenteredText(HDC hdc, char &message, int distFromTop);

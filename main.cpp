@@ -5,10 +5,10 @@ using namespace std;
 
 RECT WindowRect()
 {
-    // RECT of game window (not including title and menu) in client coordinates
+    // RECT of game window in client units (pixels)
     RECT size;
     size.left = 0;
-    size.top = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE);
+    size.top = 0;
     size.right = GAMEWIDTH;
     size.bottom = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYSIZE) + GAMEHEIGHT;
     return size;
@@ -23,11 +23,16 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     static LOCONGRID foodLoc;
     static RECT snakeRect;
 
+    auto UpdateGameState = [&](int newState)
+    {
+        gameState = newState;
+    };
+
     auto SetInitialValues = [&]()
     {
-        gameState = ID_SPLASHSCREEN;
+        gameState = ID_GAMEPLAY;
         direction = ID_MOVELEFT;
-        snake.reserve(GAMEWIDTH*GAMEHEIGHT/CELLWIDTH/CELLWIDTH);
+        snake.reserve((GAMEWIDTH * GAMEHEIGHT) / (CELLWIDTH * CELLWIDTH));
         snake.push_back({10, 15});
         snake.push_back({11, 15});
     };
@@ -50,7 +55,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     case WM_CREATE:
         ShowWindow(hwnd, SW_SHOW);
         SetInitialValues();
-        SetTimer(hwnd, ID_TIMER, TIMERINTERVAL, NULL);
+        SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
         SetFoodLoc(&foodLoc, snake);
         break;
 
@@ -59,8 +64,17 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         break;
 
     case WM_TIMER:
-        UpdateSnake(snake, direction, &foodLoc, snakeRect);
-        RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
+        switch (wParam)
+        {
+        case ID_PAUSETIMER:
+            UpdateGameState(ID_GAMEPAUSE);
+            KillTimer(hwnd, ID_PAUSETIMER);
+            break;
+        case ID_GAMETIMER:
+            UpdateSnake(snake, direction, &foodLoc, snakeRect);
+            RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
+            break;
+        }
         break;
 
     case WM_PAINT:

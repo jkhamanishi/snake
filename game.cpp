@@ -6,13 +6,14 @@ using namespace std;
 
 void PauseGame(HWND hwnd, int &gameState)
 {
-    gameState = ID_GAMEPAUSE;
-    KillTimer(hwnd, ID_TIMER);
+    gameState = ID_GAMEPAUSING;
+    KillTimer(hwnd, ID_GAMETIMER);
+    SetTimer(hwnd, ID_PAUSETIMER, 1000, NULL);
 }
 void UnpauseGame(HWND hwnd, int &gameState)
 {
     gameState = ID_GAMEPLAY;
-    SetTimer(hwnd, ID_TIMER, TIMERINTERVAL, NULL);
+    SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
 }
 void PlayPause(HWND hwnd, int &gameState)
 {

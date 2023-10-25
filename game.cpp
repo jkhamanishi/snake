@@ -2,20 +2,18 @@
 #include <ctime>  // for rand()
 #include <cstdio> // for printf() and sprintf()
 
-using namespace std;
-
-void PauseGame(HWND hwnd, int &gameState)
+void PauseGame(HWND hwnd, GAMESTATE &gameState)
 {
     gameState = ID_GAMEPAUSING;
     KillTimer(hwnd, ID_GAMETIMER);
     SetTimer(hwnd, ID_PAUSETIMER, 1000, NULL);
 }
-void UnpauseGame(HWND hwnd, int &gameState)
+void UnpauseGame(HWND hwnd, GAMESTATE &gameState)
 {
     gameState = ID_GAMEPLAY;
     SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
 }
-void PlayPause(HWND hwnd, int &gameState)
+void PlayPause(HWND hwnd, GAMESTATE &gameState)
 {
     if (gameState > ID_GAMEPAUSE)
     {
@@ -55,7 +53,7 @@ void DisplayCenteredText(HDC hdc, char &message, int distFromTop)
     DrawText(hdc, lpString, -1, &rect, (DT_CENTER | DT_NOCLIP));
 }
 
-int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 0)
+DIRECTION NextBodySegmentDirection(SNAKEV snake, int currentSegmentIndex = 0)
 {
     LOCONGRID currentSegment = snake.at(currentSegmentIndex);
     LOCONGRID nextSegment = snake.at(currentSegmentIndex + 1);
@@ -64,9 +62,13 @@ int NextBodySegmentDirection(vector<LOCONGRID> snake, int currentSegmentIndex = 
     return ((diffX << 1) | diffY);
 }
 
-void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> snake, int &gameState)
+void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION *direction, SNAKEV snake, GAMESTATE &gameState)
 {
-    int invalidDirection = NextBodySegmentDirection(snake);
+    DIRECTION invalidDirection = NextBodySegmentDirection(snake);
+    auto directionInputEnabled = [=](DIRECTION direction)
+    {
+        return invalidDirection != direction;
+    };
     switch (key)
     {
     case 0x41: // A key
@@ -93,7 +95,7 @@ void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> sn
     }
 }
 
-void InvalidateSnake(RECT &snakeRect, vector<LOCONGRID> snake)
+void InvalidateSnake(RECT &snakeRect, SNAKEV snake)
 {
     snakeRect.left = snake.at(0).x;
     snakeRect.top = snake.at(0).y;
@@ -112,7 +114,7 @@ void InvalidateSnake(RECT &snakeRect, vector<LOCONGRID> snake)
     snakeRect.bottom = (snakeRect.bottom + 1) * CELLWIDTH;
 }
 
-void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RECT &snakeRect)
+void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect)
 {
     LOCONGRID newSegment = snake.at(0);
     switch (direction)
@@ -148,12 +150,12 @@ void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RE
 LOCINPIXELS GridToPixel(LOCONGRID loc)
 {
     LOCINPIXELS locPxl;
-    locPxl.x = CELLHALFWIDTH + loc.x * CELLWIDTH;
-    locPxl.y = CELLHALFWIDTH + loc.y * CELLWIDTH;
+    locPxl.x = (CELLWIDTH / 2) + loc.x * CELLWIDTH;
+    locPxl.y = (CELLWIDTH / 2) + loc.y * CELLWIDTH;
     return locPxl;
 }
 
-void SetFoodLoc(LOCONGRID *foodLoc, vector<LOCONGRID> snake)
+void SetFoodLoc(LOCONGRID *foodLoc, SNAKEV snake)
 {
     bool validLocation = false;
     srand(time(NULL));
@@ -209,7 +211,7 @@ void PaintFood(HDC hdc, LOCONGRID loc)
     Ellipse(hdc, left, top, right, bottom);
 }
 
-void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
+void PaintSnake(HDC hdc, SNAKEV snake)
 {
     SelectObject(hdc, GetStockObject(NULL_PEN));
     SelectObject(hdc, GetStockObject(DC_BRUSH));
@@ -218,7 +220,7 @@ void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
     {
         LOCINPIXELS currentLocPxl = GridToPixel(snake.at(i));
         LOCINPIXELS nextLocPxl = GridToPixel(snake.at(i + 1));
-        int direction = NextBodySegmentDirection(snake, i);
+        DIRECTION direction = NextBodySegmentDirection(snake, i);
         int left, top, right, bottom;
         switch (direction)
         {
@@ -243,7 +245,7 @@ void PaintSnake(HDC hdc, vector<LOCONGRID> snake)
     }
 }
 
-void PaintGame(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake)
+void PaintGame(HDC hdc, LOCONGRID foodLoc, SNAKEV snake)
 {
     // PaintGrid(hdc);
     PaintSnake(hdc, snake);

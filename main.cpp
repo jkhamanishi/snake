@@ -17,9 +17,9 @@ RECT WindowRect()
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps; // paint data for Begin/EndPaint
-    static int gameState;
-    static int direction;
-    static vector<LOCONGRID> snake;
+    static GAMESTATE gameState;
+    static DIRECTION direction;
+    static SNAKEV snake;
     static LOCONGRID foodLoc;
     static RECT snakeRect;
 

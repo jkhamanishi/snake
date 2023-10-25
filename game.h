@@ -13,12 +13,13 @@ using namespace std;
 #define ID_GAMEPAUSE     0
 #define ID_GAMEPAUSING   1
 #define ID_GAMEPLAY      2
+typedef int GAMESTATE;
+void PlayPause(HWND hwnd, GAMESTATE &gameState);
 
 // Game Dimensions
 #define GAMEWIDTH  400
 #define GAMEHEIGHT 400
 #define CELLWIDTH     20
-#define CELLHALFWIDTH 10
 #define CONTENTRADIUS  8
 
 // Timer
@@ -32,7 +33,8 @@ void DisplayTextCenteredMiddle(HDC hdc, char &message);
 
 // Grid Attributes
 typedef struct { int x; int y; } LOCONGRID, LOCINPIXELS;
-void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
+typedef vector<LOCONGRID> SNAKEV;
+void SetFoodLoc(LOCONGRID* foodLoc, SNAKEV snake);
 
 // Directional Input
 // The left bit is the x-direction and the right bit is the y-direction
@@ -40,9 +42,10 @@ void SetFoodLoc(LOCONGRID* foodLoc, vector<LOCONGRID> snake);
 #define ID_MOVEDOWN   0b01
 #define ID_MOVERIGHT  0b10
 #define ID_MOVEUP    -0b01
-void KeyboardHandler(HWND hwnd, WPARAM key, int *direction, vector<LOCONGRID> snake, int &gameState);
-void UpdateSnake(vector<LOCONGRID> &snake, int direction, LOCONGRID *foodLoc, RECT &snakeRect);
+typedef int DIRECTION;
+void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION *direction, SNAKEV snake, GAMESTATE &gameState);
+void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect);
 
 // Paint the Game
-void PaintGame(HDC hdc, LOCONGRID foodLoc, vector<LOCONGRID> snake);
+void PaintGame(HDC hdc, LOCONGRID foodLoc, SNAKEV snake);
 void PaintGameOverScreen(HDC hdc, int score);

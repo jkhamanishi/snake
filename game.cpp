@@ -4,18 +4,19 @@
 
 void PauseGame(HWND hwnd, GAMESTATE &gameState)
 {
-    gameState = ID_GAMEPAUSING;
+    gameState = ID_GAMEPAUSE;
     KillTimer(hwnd, ID_GAMETIMER);
-    SetTimer(hwnd, ID_PAUSETIMER, 1000, NULL);
+    RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
 }
 void UnpauseGame(HWND hwnd, GAMESTATE &gameState)
 {
     gameState = ID_GAMEPLAY;
     SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
+    RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
 }
 void PlayPause(HWND hwnd, GAMESTATE &gameState)
 {
-    if (gameState > ID_GAMEPAUSE)
+    if (gameState == ID_GAMEPLAY)
     {
         PauseGame(hwnd, gameState);
     }
@@ -33,14 +34,14 @@ LPCTSTR charToLPCTSTR(const char *text)
     return (LPCTSTR)wText;
 }
 
-void DisplayTextCenteredMiddle(HDC hdc, char &message)
+void DisplayTextCenteredMiddle(HDC hdc, const char *message)
 {
     DisplayCenteredText(hdc, message, (GAMEHEIGHT / 2));
 }
 
-void DisplayCenteredText(HDC hdc, char &message, int distFromTop)
+void DisplayCenteredText(HDC hdc, const char *message, int distFromTop)
 {
-    LPCTSTR lpString = charToLPCTSTR(&message);
+    LPCTSTR lpString = charToLPCTSTR(message);
 
     RECT rect, textRect = {0, 0, 0, 0};
     GetClientRect(WindowFromDC(hdc), &rect);
@@ -62,40 +63,35 @@ DIRECTION NextBodySegmentDirection(SNAKEV snake, int currentSegmentIndex = 0)
     return ((diffX << 1) | diffY);
 }
 
-void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION *direction, SNAKEV snake, GAMESTATE &gameState)
+void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION &direction, SNAKEV snake, GAMESTATE &gameState)
 {
     DIRECTION invalidDirection = NextBodySegmentDirection(snake);
     auto directionInputEnabled = [=](DIRECTION direction)
     {
-        return invalidDirection != direction;
+        return gameState == ID_GAMEPLAY && invalidDirection != direction;
     };
     switch (key)
     {
     case 0x41: // A key
     case 0x25: // LEFT ARROW key
-        *direction = (invalidDirection != ID_MOVELEFT) ? ID_MOVELEFT : *direction;
+        direction = (invalidDirection != ID_MOVELEFT) ? ID_MOVELEFT : direction;
         return;
     case 0x53: // S key
     case 0x28: // DOWN ARROW key
-        *direction = (invalidDirection != ID_MOVEDOWN) ? ID_MOVEDOWN : *direction;
+        direction = (invalidDirection != ID_MOVEDOWN) ? ID_MOVEDOWN : direction;
         return;
     case 0x44: // D key
     case 0x27: // RIGHT ARROW key
-        *direction = (invalidDirection != ID_MOVERIGHT) ? ID_MOVERIGHT : *direction;
+        direction = (invalidDirection != ID_MOVERIGHT) ? ID_MOVERIGHT : direction;
         return;
     case 0x57: // W key
     case 0x26: // UP ARROW key
-        *direction = (invalidDirection != ID_MOVEUP) ? ID_MOVEUP : *direction;
-        return;
-    case 0x1B: // ESC key
-        PlayPause(hwnd, gameState);
-        return;
-    default:
+        direction = (invalidDirection != ID_MOVEUP) ? ID_MOVEUP : direction;
         return;
     }
 }
 
-void InvalidateSnake(RECT &snakeRect, SNAKEV snake)
+void InvalidateSnakeRegion(RECT &snakeRect, SNAKEV snake)
 {
     snakeRect.left = snake.at(0).x;
     snakeRect.top = snake.at(0).y;
@@ -114,7 +110,27 @@ void InvalidateSnake(RECT &snakeRect, SNAKEV snake)
     snakeRect.bottom = (snakeRect.bottom + 1) * CELLWIDTH;
 }
 
-void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect)
+bool CheckCollision(SNAKEV &snake)
+{
+    // If snake is outside walls
+    if (snake.at(0).x < 0 || TOTALXCELLS - 1 < snake.at(0).x || snake.at(0).y < 0 || TOTALYCELLS - 1 < snake.at(0).y)
+    {
+        snake.erase(snake.begin());
+        return true;
+    }
+    snake.pop_back();
+    // If snake is overlapping with self
+    for (int i = 1; i < snake.size(); i++)
+    {
+        if (snake.at(0).x == snake.at(i).x && snake.at(0).y == snake.at(i).y)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect, GAMESTATE &gameState)
 {
     LOCONGRID newSegment = snake.at(0);
     switch (direction)
@@ -142,8 +158,13 @@ void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &s
     }
     else
     {
-        InvalidateSnake(snakeRect, snake);
-        snake.pop_back();
+        InvalidateSnakeRegion(snakeRect, snake);
+        if (CheckCollision(snake))
+        {
+            // Game Over
+            gameState = ID_GAMEOVER;
+            SetRect(&snakeRect, 0, 0, GAMEWIDTH, GAMEHEIGHT);
+        }
     }
 }
 
@@ -161,8 +182,8 @@ void SetFoodLoc(LOCONGRID *foodLoc, SNAKEV snake)
     srand(time(NULL));
     while (!validLocation)
     {
-        (*foodLoc).x = rand() % (GAMEWIDTH / CELLWIDTH);
-        (*foodLoc).y = rand() % (GAMEHEIGHT / CELLWIDTH);
+        (*foodLoc).x = rand() % TOTALXCELLS;
+        (*foodLoc).y = rand() % TOTALYCELLS;
         validLocation = true;
         for (LOCONGRID bodySegment : snake)
         {
@@ -252,9 +273,16 @@ void PaintGame(HDC hdc, LOCONGRID foodLoc, SNAKEV snake)
     PaintFood(hdc, foodLoc);
 }
 
+void PaintCountdown(HDC hdc, int num)
+{
+    char pText[1];
+    sprintf(pText, "%d", num);
+    DisplayTextCenteredMiddle(hdc, pText);
+}
+
 void PaintGameOverScreen(HDC hdc, int score)
 {
     char pGameOverText[100];
     sprintf(pGameOverText, "Game Over\n\nScore:\n%d", score);
-    DisplayTextCenteredMiddle(hdc, *pGameOverText);
+    DisplayTextCenteredMiddle(hdc, pGameOverText);
 }

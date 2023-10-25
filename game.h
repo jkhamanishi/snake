@@ -11,7 +11,6 @@ using namespace std;
 #define ID_SPLASHSCREEN -3
 #define ID_GAMESTARTING -2
 #define ID_GAMEPAUSE     0
-#define ID_GAMEPAUSING   1
 #define ID_GAMEPLAY      2
 typedef int GAMESTATE;
 void PlayPause(HWND hwnd, GAMESTATE &gameState);
@@ -21,15 +20,18 @@ void PlayPause(HWND hwnd, GAMESTATE &gameState);
 #define GAMEHEIGHT 400
 #define CELLWIDTH     20
 #define CONTENTRADIUS  8
+#define TOTALXCELLS (GAMEWIDTH / CELLWIDTH)
+#define TOTALYCELLS (GAMEHEIGHT / CELLWIDTH)
 
 // Timer
+#define ID_GAMETIMER      340
 #define GAMETIMERINTERVAL 200
-#define ID_GAMETIMER  360
-#define ID_PAUSETIMER 380
+#define ID_COUNTDOWN      380
+#define COUNTDOWNINTERVAL 800
 
 // Display Text Function
-void DisplayCenteredText(HDC hdc, char &message, int distFromTop);
-void DisplayTextCenteredMiddle(HDC hdc, char &message);
+void DisplayCenteredText(HDC hdc, const char *message, int distFromTop);
+void DisplayTextCenteredMiddle(HDC hdc, const char *message);
 
 // Grid Attributes
 typedef struct { int x; int y; } LOCONGRID, LOCINPIXELS;
@@ -43,9 +45,10 @@ void SetFoodLoc(LOCONGRID* foodLoc, SNAKEV snake);
 #define ID_MOVERIGHT  0b10
 #define ID_MOVEUP    -0b01
 typedef int DIRECTION;
-void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION *direction, SNAKEV snake, GAMESTATE &gameState);
-void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect);
+void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION &direction, SNAKEV snake, GAMESTATE &gameState);
+void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect, GAMESTATE &gameState);
 
 // Paint the Game
 void PaintGame(HDC hdc, LOCONGRID foodLoc, SNAKEV snake);
+void PaintCountdown(HDC hdc, int num);
 void PaintGameOverScreen(HDC hdc, int score);

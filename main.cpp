@@ -17,24 +17,30 @@ RECT WindowRect()
 LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps; // paint data for Begin/EndPaint
+    static int countdown;
     static GAMESTATE gameState;
     static DIRECTION direction;
     static SNAKEV snake;
     static LOCONGRID foodLoc;
     static RECT snakeRect;
 
-    auto UpdateGameState = [&](int newState)
+    auto UpdateGameState = [&](GAMESTATE newState)
     {
         gameState = newState;
     };
 
-    auto SetInitialValues = [&]()
+    auto ResetGame = [&]()
     {
-        gameState = ID_GAMEPLAY;
+        countdown = 3;
+        gameState = ID_GAMESTARTING;
         direction = ID_MOVELEFT;
+        snake.clear();
         snake.reserve((GAMEWIDTH * GAMEHEIGHT) / (CELLWIDTH * CELLWIDTH));
         snake.push_back({10, 15});
         snake.push_back({11, 15});
+        SetTimer(hwnd, ID_COUNTDOWN, COUNTDOWNINTERVAL, NULL);
+        SetFoodLoc(&foodLoc, snake);
+        RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
     };
 
     auto MenuHandler = [&]()
@@ -45,7 +51,8 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             DestroyWindow(hwnd);
             break;
         case IDM_PLAYPAUSE:
-            PlayPause(hwnd, gameState);
+            INPUT escKey = {.type = INPUT_KEYBOARD, .ki = {.wVk = VK_ESCAPE}};
+            SendInput(1, &escKey, sizeof(INPUT));
             break;
         }
     };
@@ -53,10 +60,8 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
     case WM_CREATE:
+        UpdateGameState(ID_SPLASHSCREEN);
         ShowWindow(hwnd, SW_SHOW);
-        SetInitialValues();
-        SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
-        SetFoodLoc(&foodLoc, snake);
         break;
 
     case WM_COMMAND:
@@ -66,12 +71,17 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     case WM_TIMER:
         switch (wParam)
         {
-        case ID_PAUSETIMER:
-            UpdateGameState(ID_GAMEPAUSE);
-            KillTimer(hwnd, ID_PAUSETIMER);
+        case ID_COUNTDOWN:
+            if (!(countdown > 0))
+            {
+                UpdateGameState(ID_GAMEPLAY);
+                KillTimer(hwnd, ID_COUNTDOWN);
+                SetTimer(hwnd, ID_GAMETIMER, GAMETIMERINTERVAL, NULL);
+            }
+            RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
             break;
         case ID_GAMETIMER:
-            UpdateSnake(snake, direction, &foodLoc, snakeRect);
+            UpdateSnake(snake, direction, &foodLoc, snakeRect, gameState);
             RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
             break;
         }
@@ -79,13 +89,49 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
     case WM_PAINT:
         BeginPaint(hwnd, &ps);
-        PaintGame(ps.hdc, foodLoc, snake);
-        // PaintGameOverScreen(ps.hdc, snake.size()*100);
+        switch (gameState)
+        {
+        case ID_SPLASHSCREEN:
+            DisplayTextCenteredMiddle(ps.hdc, "snake game\n\n\npress any button to start");
+            break;
+        case ID_GAMESTARTING:
+            PaintCountdown(ps.hdc, countdown);
+            countdown--;
+            break;
+        case ID_GAMEPLAY:
+            PaintGame(ps.hdc, foodLoc, snake);
+            break;
+        case ID_GAMEPAUSE:
+            DisplayTextCenteredMiddle(ps.hdc, "paused");
+            break;
+        case ID_GAMEOVER:
+            PaintGame(ps.hdc, foodLoc, snake);
+            PaintGameOverScreen(ps.hdc, snake.size() * 100);
+            KillTimer(hwnd, ID_GAMETIMER);
+            break;
+        }
         EndPaint(hwnd, &ps);
         break;
 
     case WM_KEYDOWN:
-        KeyboardHandler(hwnd, wParam, &direction, snake, gameState);
+        switch (gameState)
+        {
+        case ID_SPLASHSCREEN:
+        case ID_GAMEOVER:
+            ResetGame();
+            break;
+        case ID_GAMEPLAY:
+        case ID_GAMEPAUSE:
+            KeyboardHandler(hwnd, wParam, direction, snake, gameState);
+            break;
+        }
+        break;
+    
+    case WM_KEYUP:
+        if (gameState >= 0 && wParam == VK_ESCAPE)
+        {
+            PlayPause(hwnd, gameState);
+        }
         break;
 
     case WM_CLOSE:

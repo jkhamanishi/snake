@@ -3,10 +3,15 @@
 IDR_SNAKEICON ICON "snake.ico"
 
 IDR_MENU MENU
-BEGIN
+{
     POPUP "&Game"
-    BEGIN
+    {
         MENUITEM "&Play/Pause\tEsc", IDM_PLAYPAUSE
         MENUITEM "E&xit\tAlt+F4", IDM_EXIT
-    END
-END
+    }
+    POPUP "&Controls"
+    {
+        MENUITEM "&WASD", IDM_WASD, CHECKED
+        MENUITEM "&Arrow Keys", IDM_ARROWS, CHECKED
+    }
+}

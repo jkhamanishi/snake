@@ -4,9 +4,12 @@
 
 void PauseGame(HWND hwnd, GAMESTATE &gameState)
 {
-    gameState = ID_GAMEPAUSE;
-    KillTimer(hwnd, ID_GAMETIMER);
-    RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
+    if (gameState >= ID_GAMEPAUSE)
+    {
+        gameState = ID_GAMEPAUSE;
+        KillTimer(hwnd, ID_GAMETIMER);
+        RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
+    }
 }
 void UnpauseGame(HWND hwnd, GAMESTATE &gameState)
 {
@@ -16,13 +19,14 @@ void UnpauseGame(HWND hwnd, GAMESTATE &gameState)
 }
 void PlayPause(HWND hwnd, GAMESTATE &gameState)
 {
-    if (gameState == ID_GAMEPLAY)
+    switch (gameState)
     {
+    case ID_GAMEPLAY:
         PauseGame(hwnd, gameState);
-    }
-    else
-    {
+        break;
+    case ID_GAMEPAUSE:
         UnpauseGame(hwnd, gameState);
+        break;
     }
 }
 
@@ -63,31 +67,30 @@ DIRECTION NextBodySegmentDirection(SNAKEV snake, int currentSegmentIndex = 0)
     return ((diffX << 1) | diffY);
 }
 
-void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION &direction, SNAKEV snake, GAMESTATE &gameState)
+void KeyboardHandler(WPARAM key, DIRECTION &direction, SNAKEV snake, ENABLECONTROLS enabledControls)
 {
-    DIRECTION invalidDirection = NextBodySegmentDirection(snake);
-    auto directionInputEnabled = [=](DIRECTION direction)
+    auto ChangeDirection = [&](bool enabled, DIRECTION newDirection)
     {
-        return gameState == ID_GAMEPLAY && invalidDirection != direction;
+        direction = (enabled && newDirection != NextBodySegmentDirection(snake)) ? newDirection : direction;
     };
     switch (key)
     {
-    case 0x41: // A key
-    case 0x25: // LEFT ARROW key
-        direction = (invalidDirection != ID_MOVELEFT) ? ID_MOVELEFT : direction;
-        return;
-    case 0x53: // S key
-    case 0x28: // DOWN ARROW key
-        direction = (invalidDirection != ID_MOVEDOWN) ? ID_MOVEDOWN : direction;
-        return;
-    case 0x44: // D key
-    case 0x27: // RIGHT ARROW key
-        direction = (invalidDirection != ID_MOVERIGHT) ? ID_MOVERIGHT : direction;
-        return;
-    case 0x57: // W key
-    case 0x26: // UP ARROW key
-        direction = (invalidDirection != ID_MOVEUP) ? ID_MOVEUP : direction;
-        return;
+    case 'W':
+        return ChangeDirection(enabledControls.wasd, ID_MOVEUP);
+    case 'A': // A key
+        return ChangeDirection(enabledControls.wasd, ID_MOVELEFT);
+    case 'S': // S key
+        return ChangeDirection(enabledControls.wasd, ID_MOVEDOWN);
+    case 'D': // D key
+        return ChangeDirection(enabledControls.wasd, ID_MOVERIGHT);
+    case VK_LEFT: // LEFT ARROW key
+        return ChangeDirection(enabledControls.arrowkeys, ID_MOVELEFT);
+    case VK_DOWN: // DOWN ARROW key
+        return ChangeDirection(enabledControls.arrowkeys, ID_MOVEDOWN);
+    case VK_RIGHT: // RIGHT ARROW key
+        return ChangeDirection(enabledControls.arrowkeys, ID_MOVERIGHT);
+    case VK_UP: // UP ARROW key
+        return ChangeDirection(enabledControls.arrowkeys, ID_MOVEUP);
     }
 }
 

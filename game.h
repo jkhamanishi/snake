@@ -7,11 +7,12 @@
 using namespace std;
 
 // Game State Identifiers
-#define ID_GAMEOVER     -4
-#define ID_SPLASHSCREEN -3
-#define ID_GAMESTARTING -2
-#define ID_GAMEPAUSE     0
-#define ID_GAMEPLAY      2
+#define ID_GAMEOVER      -4
+#define ID_NEXTGAMEREADY -3
+#define ID_SPLASHSCREEN  -2
+#define ID_GAMESTARTING  -1
+#define ID_GAMEPAUSE      0
+#define ID_GAMEPLAY       2
 typedef int GAMESTATE;
 void PlayPause(HWND hwnd, GAMESTATE &gameState);
 
@@ -28,13 +29,15 @@ void PlayPause(HWND hwnd, GAMESTATE &gameState);
 #define GAMETIMERINTERVAL 200
 #define ID_COUNTDOWN      380
 #define COUNTDOWNINTERVAL 800
+#define ID_GAMEOVERTIMER  360
+#define NEXTGAMEWAIT     2000
 
 // Display Text Function
 void DisplayCenteredText(HDC hdc, const char *message, int distFromTop);
 void DisplayTextCenteredMiddle(HDC hdc, const char *message);
 
 // Grid Attributes
-typedef struct { int x; int y; } LOCONGRID, LOCINPIXELS;
+typedef struct location { int x; int y; } LOCONGRID, LOCINPIXELS;
 typedef vector<LOCONGRID> SNAKEV;
 void SetFoodLoc(LOCONGRID* foodLoc, SNAKEV snake);
 
@@ -45,7 +48,8 @@ void SetFoodLoc(LOCONGRID* foodLoc, SNAKEV snake);
 #define ID_MOVERIGHT  0b10
 #define ID_MOVEUP    -0b01
 typedef int DIRECTION;
-void KeyboardHandler(HWND hwnd, WPARAM key, DIRECTION &direction, SNAKEV snake, GAMESTATE &gameState);
+typedef struct controls { bool wasd; bool arrowkeys; } ENABLECONTROLS;
+void KeyboardHandler(WPARAM key, DIRECTION &direction, SNAKEV snake, ENABLECONTROLS enabledControls);
 void UpdateSnake(SNAKEV &snake, DIRECTION direction, LOCONGRID *foodLoc, RECT &snakeRect, GAMESTATE &gameState);
 
 // Paint the Game

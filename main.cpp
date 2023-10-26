@@ -23,16 +23,26 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     static SNAKEV snake;
     static LOCONGRID foodLoc;
     static RECT snakeRect;
+    static ENABLECONTROLS enabledControls;
 
     auto UpdateGameState = [&](GAMESTATE newState)
     {
         gameState = newState;
     };
 
+    auto InitializeWindow = [&]()
+    {
+        UpdateGameState(ID_SPLASHSCREEN);
+        enabledControls = {
+            .wasd = true,
+            .arrowkeys = true
+        };
+    };
+
     auto ResetGame = [&]()
     {
         countdown = 3;
-        gameState = ID_GAMESTARTING;
+        UpdateGameState(ID_GAMESTARTING);
         direction = ID_MOVELEFT;
         snake.clear();
         snake.reserve((GAMEWIDTH * GAMEHEIGHT) / (CELLWIDTH * CELLWIDTH));
@@ -43,6 +53,17 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         RedrawWindow(hwnd, NULL, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
     };
 
+    auto ToggleMenuItem = [&](bool &enableFlag)
+    {
+        MENUITEMINFO info = {
+            .cbSize = sizeof(MENUITEMINFO),
+            .fMask = MIIM_STATE,
+            .fState = (UINT)((enableFlag = !enableFlag) ? MFS_CHECKED : MFS_UNCHECKED)
+        };
+        SetMenuItemInfo(GetMenu(hwnd), wParam, FALSE, &info);
+        DrawMenuBar(hwnd);
+    };
+
     auto MenuHandler = [&]()
     {
         switch (wParam)
@@ -51,8 +72,23 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             DestroyWindow(hwnd);
             break;
         case IDM_PLAYPAUSE:
-            INPUT escKey = {.type = INPUT_KEYBOARD, .ki = {.wVk = VK_ESCAPE}};
-            SendInput(1, &escKey, sizeof(INPUT));
+            switch (gameState)
+            {
+            case ID_SPLASHSCREEN:
+            case ID_GAMEOVER:
+                ResetGame();
+                break;
+            case ID_GAMEPLAY:
+            case ID_GAMEPAUSE:
+                PlayPause(hwnd, gameState);
+                break;
+            }
+            break;
+        case IDM_WASD:
+            ToggleMenuItem(enabledControls.wasd);
+            break;
+        case IDM_ARROWS:
+            ToggleMenuItem(enabledControls.arrowkeys);
             break;
         }
     };
@@ -60,7 +96,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
     case WM_CREATE:
-        UpdateGameState(ID_SPLASHSCREEN);
+        InitializeWindow();
         ShowWindow(hwnd, SW_SHOW);
         break;
 
@@ -83,6 +119,10 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         case ID_GAMETIMER:
             UpdateSnake(snake, direction, &foodLoc, snakeRect, gameState);
             RedrawWindow(hwnd, &snakeRect, NULL, (RDW_ERASENOW | RDW_INVALIDATE | RDW_ERASE));
+            break;
+        case ID_GAMEOVERTIMER:
+            KillTimer(hwnd, ID_GAMEOVERTIMER);
+            UpdateGameState(ID_NEXTGAMEREADY);
             break;
         }
         break;
@@ -108,6 +148,7 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             PaintGame(ps.hdc, foodLoc, snake);
             PaintGameOverScreen(ps.hdc, snake.size() * 100);
             KillTimer(hwnd, ID_GAMETIMER);
+            SetTimer(hwnd, ID_GAMEOVERTIMER, NEXTGAMEWAIT, NULL);
             break;
         }
         EndPaint(hwnd, &ps);
@@ -117,18 +158,17 @@ LRESULT CALLBACK WindowProcess(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         switch (gameState)
         {
         case ID_SPLASHSCREEN:
-        case ID_GAMEOVER:
+        case ID_NEXTGAMEREADY:
             ResetGame();
             break;
         case ID_GAMEPLAY:
-        case ID_GAMEPAUSE:
-            KeyboardHandler(hwnd, wParam, direction, snake, gameState);
+            KeyboardHandler(wParam, direction, snake, enabledControls);
             break;
         }
         break;
-    
+
     case WM_KEYUP:
-        if (gameState >= 0 && wParam == VK_ESCAPE)
+        if (wParam == VK_ESCAPE)
         {
             PlayPause(hwnd, gameState);
         }
